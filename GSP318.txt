@@ -1,0 +1,88 @@
+**Kindly replace < > with specified entries in your lab
+
+
+Task 1. Create a Docker image and store the Dockerfile
+
+In Cloud shell enter commands given below :
+ 
+gcloud auth list
+gsutil cat gs://cloud-training/gsp318/marking/setup_marking_v2.sh | bash
+gcloud source repos clone valkyrie-app
+cd valkyrie-app
+cat > Dockerfile <<EOF
+FROM golang:1.10
+WORKDIR /go/src/app
+COPY source .
+RUN go install -v
+ENTRYPOINT ["app","-single=true","-port=8080"]
+EOF
+docker build -t <Docker Image>:<Tag Name> .
+cd ..
+cd marking
+./step1_v2.sh
+
+
+
+
+
+
+Task 2. Test the created Docker image
+
+In Cloud shell enter commands given below :
+
+cd ..
+cd valkyrie-app
+docker run -p 8080:8080 <Docker Image>:<Tag Name> &
+cd ..
+cd marking
+./step2_v2.sh
+
+
+
+
+
+
+
+Task 3. Push the Docker image to the Artifact Registry
+ 
+ 
+- Navigate to Artifact Registry using Navigation Menu
+- Click on New Repository
+- In name enter : valkyrie-repository
+- In format select Docker
+- In Region use us-central1
+** After creating the repository kindly copy the repository path as we will be using it in next step
+
+ 
+In Cloud shell enter commands given below :
+
+gcloud auth configure-docker us-central1-docker.pkg.dev
+cd ..
+cd valkyrie-app
+docker tag <Docker Image>:<Tag Name> <Path that you copied in previous step>/<Docker Image>:<Tag Name>
+docker push <Path that you copied in previous step>/<Docker Image>:<Tag Name>
+
+
+
+
+
+
+
+Task 4. Create and expose a deployment in Kubernetes
+
+
+
+Get the Kubernetes credentials before you deploy the image onto the Kubernetes cluster.
+Before you create the deployments, make sure you check the deployment.yaml file. Kurt thinks they need some values set (he thinks he left some placeholder values).
+Create the deployments from the deployment.yaml and service.yaml files.
+From the Navigation Menu, select Kubernetes Engine > Services & Ingress. Click on the load balancer IP Address of the valkyrie-dev service to verify your services are up and running.
+ 
+sed -i s#IMAGE_HERE#<Path that you copied in previous step>/<Docker Image>:<Tag Name>#g k8s/deployment.yaml
+gcloud container clusters get-credentials valkyrie-dev --zone us-east1-d
+kubectl create -f k8s/deployment.yaml
+kubectl create -f k8s/service.yaml
+
+- Go to Navigation Menu
+- Select Kubernetes Engine > Services & Ingress
+- Click on the load balancer IP Address of the valkyrie-dev service
+
